@@ -2,3 +2,4 @@
 echo 'hello hostinger';
 ?>
 please synchronize with ftp!!!
+new
