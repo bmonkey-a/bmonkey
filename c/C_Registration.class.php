@@ -24,8 +24,9 @@ class C_Registration extends C_Base
             else {
                 $check = '';
                 if ($this->mUsers->Register($this->udata, $check)) {
-                    header("Refresh:5; url=index.php?main");
                     $this->errorMessage = "Регистрация прошла успешно, вы будете перемещены на Главную страницу через 3 секунды";
+                    header("Location: index.php?main");
+                    exit;
                 } else {
                     if (!empty($check))
                         $this->errorMessage = "Пользователь с адресом $check уже зарегистрирован. Забыли пароль?";
