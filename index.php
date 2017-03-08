@@ -17,6 +17,8 @@ spl_autoload_register(function ($class) {
     include_once($path);
 });
 
+
+/*Подумать над улучшением роутинга*/
 if(empty($_REQUEST)){
     header("Location: index.php?main");
     exit;
@@ -25,6 +27,9 @@ if(empty($_REQUEST)){
 $action = array_shift(array_keys($_REQUEST));
 
 switch ($action) {
+    case "register":
+        $controller = new C_Registration();
+        break;
     case "login":
         $controller = new C_Login();
         break;

@@ -90,17 +90,18 @@ class M_SQLite3
     /**
      * @param string $query
      * @param bool $mode
-     * @return array|bool
+     * @return array|string|bool
      * @throws Exception
      */
     public function SelectOne(string $query, bool $mode = true)
     {
         $result = $this->_db->querySingle($query, $mode);
-        if (empty($result))
+        return $result;
+        /*if (is_array($result) && empty($result))
             throw new Exception("No data resolve!");
-        if (!$result)
+        if ($result == null)
             throw new Exception("Bad request!");
-        return $result ?: false;
+         $result?: false;*/
     }
 
     /**

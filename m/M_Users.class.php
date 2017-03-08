@@ -15,11 +15,38 @@ class M_Users
         $this->onlineMap = null;
     }
 
+    function __get(string $name)
+    {
+        if ($name == "sid")
+            return $this->sid;
+        throw new Exception("Unknown property!");
+    }
+
     public function ClearSessions()
     {
         $min = time() - 60 * 20;
         $where = "last_action < '$min'";
         $this->sqlite->Delete('sessions', $where);
+    }
+
+    /**
+     * @param array $udata
+     * @param $link
+     * @return bool
+     */
+    public function Register(array $udata, &$link)
+    {
+        $user = $this->GetByLogin($udata['login']);
+        if ($user) {
+            $link = $user['login'];
+            return false;
+        }
+        $udata['password'] = password_hash($udata['password'], PASSWORD_BCRYPT);
+        if (!$this->sqlite->Insert('users', $udata))
+            return false;
+        $uid = $this->sqlite->db->lastInsertRowID();
+        $this->sid = $this->OpenSession($uid);
+        return true;
     }
 
     /**
@@ -37,7 +64,6 @@ class M_Users
             $expire = time() + 3600 * 24 * 100;
             $udata = array('login' => $login, 'password' => $user['password']);
             setcookie('udata', serialize($udata), $expire);
-            /** Не забыть ансериалайз с куки сделать */
         }
         $this->sid = $this->OpenSession((int)$user['id_user']);
         return true;
@@ -77,7 +103,7 @@ class M_Users
      * @param string $abd
      * @return string
      */
-    function randomStr(int $outLength = 21, string $abd = '')
+    public function randomStr(int $outLength = 21, string $abd = '')
     {
         $s = '';
         $abd = $abd ?: implode(range('A', 'Z')) . implode(range('a', 'z')) . implode(range('0', '9'));
@@ -97,7 +123,7 @@ class M_Users
 
     /**
      * @param int $id_user
-     * @return array|bool
+     * @return bool
      */
     public function getById(int $id_user = 0)
     {
@@ -105,8 +131,7 @@ class M_Users
         if (!$id_user)
             return false;
         $query = "SELECT * FROM users WHERE id_user = '$id_user'";
-        $result = $this->sqlite->SelectOne($query);
-        return $result;
+        return $this->sqlite->SelectOne($query);
     }
 
     /**
@@ -169,8 +194,8 @@ class M_Users
         if (!$id_user)
             return false;
         $permission = $this->sqlite->escape($permission);
-        $query = "SELECT count(*) FROM permissions_to_roles a2r
-			  LEFT JOIN users u ON u.id_role = a2r.id_role
+        $query = "SELECT count(*) FROM permissions_to_roles p2r
+			  LEFT JOIN users u ON u.id_role = p2r.id_role
 			  LEFT JOIN permissions p ON p.id_permission = p2r.id_permission 
 			  WHERE u.id_user = '$id_user' AND p.title_permission= '$permission'";
         return (bool)$this->sqlite->SelectOne($query, false);
